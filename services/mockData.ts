@@ -1,4 +1,4 @@
-import { Movie, Actor, ActorStatus, MovieCensorship, MovieStatus, SehuatangData } from '../types';
+import { Movie, Actor, ActorStatus, MovieCensorship, MovieStatus, SehuatangData, Tag, Magnet } from '../types';
 
 // --- 1. 静态演员数据 (12位) ---
 export const MOCK_ACTORS: Actor[] = [
@@ -10,7 +10,6 @@ export const MOCK_ACTORS: Actor[] = [
       id: 'a2', name: '河北彩花', imageUrl: 'https://randomuser.me/api/portraits/women/2.jpg', sourceImageUrl: 'https://randomuser.me/api/portraits/women/2.jpg', movieCount: 8, status: ActorStatus.ACTIVE, sourceUrl: 'https://www.javbus.com/star/xx2', isFavorite: true, birthDate: '1999-06-15',
       profile: '2017年在S1出道，被誉为“直球偶像”。出道即巅峰，随后隐退3年，2021年回归S1，再次掀起热潮。拥有极高的颜值和独特的气质。'
   },
-  // ... 其他演员数据保持不变，可按需添加 profile
   { id: 'a3', name: '相泽南', imageUrl: 'https://randomuser.me/api/portraits/women/3.jpg', sourceImageUrl: 'https://randomuser.me/api/portraits/women/3.jpg', movieCount: 12, status: ActorStatus.RETIRED, isFavorite: false, birthDate: '1996-06-14' },
   { id: 'a4', name: '小宵虎南', imageUrl: 'https://randomuser.me/api/portraits/women/4.jpg', sourceImageUrl: 'https://randomuser.me/api/portraits/women/4.jpg', movieCount: 5, status: ActorStatus.ACTIVE, isFavorite: false, birthDate: '1999-04-01' },
   { id: 'a5', name: '新有菜', imageUrl: 'https://randomuser.me/api/portraits/women/5.jpg', sourceImageUrl: 'https://randomuser.me/api/portraits/women/5.jpg', movieCount: 20, status: ActorStatus.ACTIVE, isFavorite: true, birthDate: '1998-05-26' },
@@ -24,10 +23,18 @@ export const MOCK_ACTORS: Actor[] = [
 ];
 
 // --- 2. 静态磁力链接数据 ---
-const mockMagnets = [
-    { title: 'SSNI-888-C.mp4', size: '5.2GB', date: '2023-11-16', link: 'magnet:?xt=urn:btih:mock1', isHD: true, movieCode: 'SSNI-888' },
-    { title: 'SSNI-888.avi', size: '1.4GB', date: '2023-11-15', link: 'magnet:?xt=urn:btih:mock2', isHD: false, movieCode: 'SSNI-888' }
+const mockMagnets: Magnet[] = [
+    { id: 'mag1', title: 'SSNI-888-C.mp4', size: '5.2GB', date: '2023-11-16', link: 'magnet:?xt=urn:btih:mock1', isHD: true, movieCode: 'SSNI-888' },
+    { id: 'mag2', title: 'SSNI-888.avi', size: '1.4GB', date: '2023-11-15', link: 'magnet:?xt=urn:btih:mock2', isHD: false, movieCode: 'SSNI-888' }
 ];
+
+// Helper for tags
+const createTags = (names: string[]): Tag[] => {
+    return names.map((name, index) => ({
+        id: `tag_${Math.random().toString(36).substr(2, 9)}`,
+        name
+    }));
+};
 
 // --- 3. 静态色花堂数据 (6条) ---
 export const MOCK_SEHUATANG_DATA: SehuatangData[] = [
@@ -95,7 +102,7 @@ export const MOCK_MOVIES: Movie[] = [
     description: '三上悠亜・新有菜 豪华共演！S1专属女优梦幻集结。',
     transTitle: '三上悠亜・新有菜 豪华共演！S1专属女优梦幻集结',
     transDescription: 'S1的20周年纪念作品，集结了三上悠亚和新有菜两位顶尖女优，带来前所未有的豪华共演。',
-    tags: ['单体作品', '美少女', '豪华共演', '4K'],
+    tags: createTags(['单体作品', '美少女', '豪华共演', '4K']),
     magnets: mockMagnets, sehuatangData: [MOCK_SEHUATANG_DATA[0], MOCK_SEHUATANG_DATA[1]], isMultiActor: true
   },
   // 2. 待处理 & 单人 & 退役
@@ -107,7 +114,7 @@ export const MOCK_MOVIES: Movie[] = [
     actorIds: ['a3'], // 相泽南
     description: '相泽南引退作，感人至深的最后演出。',
     transTitle: '相泽南引退作：最后的闪耀',
-    tags: ['单体作品', '引退作', '剧情', '催泪'],
+    tags: createTags(['单体作品', '引退作', '剧情', '催泪']),
     magnets: [], sehuatangData: [MOCK_SEHUATANG_DATA[2]], isMultiActor: false
   },
   // 3. 待下载 & 无码 & 115已存
@@ -118,7 +125,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: false, censorship: MovieCensorship.UNCENSORED, rating: 7.5,
     actorIds: [], // 素人
     description: '【个人拍摄】画质清晰，近距离拍摄。',
-    tags: ['素人', '自拍', '无码', '中出'],
+    tags: createTags(['素人', '自拍', '无码', '中出']),
     magnets: [], sehuatangData: [MOCK_SEHUATANG_DATA[3]], isMultiActor: false
   },
   // 4. 已排除 & VR & 有码
@@ -129,7 +136,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: false, censorship: MovieCensorship.CENSORED, rating: 6.5,
     actorIds: ['a6'], // 波多野结衣
     description: '波多野结衣 VR体验 就在你眼前。',
-    tags: ['VR', '人妻', '巨乳'],
+    tags: createTags(['VR', '人妻', '巨乳']),
     magnets: [], sehuatangData: [MOCK_SEHUATANG_DATA[4]], isMultiActor: false
   },
   // 5. 已入库 & 双备份 & 无码
@@ -140,7 +147,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: true, censorship: MovieCensorship.UNCENSORED, rating: 9.0,
     actorIds: ['a8'], // 深田咏美
     description: '深田咏美 海外流出，展现最真实的一面。',
-    tags: ['无码', '整容级', '痴女', '颜射'],
+    tags: createTags(['无码', '整容级', '痴女', '颜射']),
     isMultiActor: false
   },
   // 6. 待下载 & 河北彩花
@@ -151,7 +158,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: true, censorship: MovieCensorship.CENSORED, rating: 9.3,
     actorIds: ['a2'], // 河北彩花
     description: '河北彩花最新力作，极致的美感与视觉享受。',
-    tags: ['单体作品', '美腿', '清纯', '4K'],
+    tags: createTags(['单体作品', '美腿', '清纯', '4K']),
     isMultiActor: false
   },
   // 7. 待处理 & 安斋拉拉
@@ -162,7 +169,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: true, censorship: MovieCensorship.CENSORED, rating: 9.1,
     actorIds: ['a9'], // 安斋拉拉
     description: '神之乳 安斋拉拉 回归作。',
-    tags: ['巨乳', '神颜', '复出'],
+    tags: createTags(['巨乳', '神颜', '复出']),
     magnets: [], sehuatangData: [MOCK_SEHUATANG_DATA[5]], isMultiActor: false
   },
   // 8. 已入库 & 小宵虎南
@@ -173,7 +180,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: false, censorship: MovieCensorship.CENSORED, rating: 8.2,
     actorIds: ['a4'], // 小宵虎南
     description: '小宵虎南 VR 沉浸式体验。',
-    tags: ['VR', '美臀', '骑乘'],
+    tags: createTags(['VR', '美臀', '骑乘']),
     isMultiActor: false
   },
   // 9. 待处理 & 凉森玲梦
@@ -184,7 +191,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: false, censorship: MovieCensorship.CENSORED, rating: 8.6,
     actorIds: ['a10'], // 凉森玲梦
     description: '凉森玲梦 极致诱惑。',
-    tags: ['美眼', '白丝', 'OL'],
+    tags: createTags(['美眼', '白丝', 'OL']),
     isMultiActor: false
   },
   // 10. 待下载 & 八挂海
@@ -195,7 +202,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: false, censorship: MovieCensorship.CENSORED, rating: 8.4,
     actorIds: ['a11'], // 八挂海
     description: '八挂海 青春活力。',
-    tags: ['短发', '可爱', '校园'],
+    tags: createTags(['短发', '可爱', '校园']),
     isMultiActor: false
   },
   // 11. 已入库 & 枫富爱
@@ -206,7 +213,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: true, censorship: MovieCensorship.CENSORED, rating: 8.9,
     actorIds: ['a12'], // 枫富爱
     description: '枫富爱 奇迹的美少女。',
-    tags: ['美少女', '黑长直', '新人'],
+    tags: createTags(['美少女', '黑长直', '新人']),
     isMultiActor: false
   },
   // 12. 待处理 & 三上悠亚 (旧作)
@@ -217,7 +224,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: true, censorship: MovieCensorship.CENSORED, rating: 9.8,
     actorIds: ['a1'], // 三上
     description: '三上悠亚出道作，传说开始的地方。',
-    tags: ['出道作', '偶像', '经典'],
+    tags: createTags(['出道作', '偶像', '经典']),
     isMultiActor: false
   },
   // 13. 已排除 & 烂片模拟
@@ -228,7 +235,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: false, censorship: MovieCensorship.CENSORED, rating: 2.0,
     actorIds: ['a4'], // 小宵虎南 (假设关联)
     description: '一部评价很低的影片，已被排除。',
-    tags: ['雷作'],
+    tags: createTags(['雷作']),
     isMultiActor: false
   },
   // 14. 待下载 & 共演 (河北 & 枫富爱)
@@ -239,7 +246,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: true, censorship: MovieCensorship.CENSORED, rating: 9.4,
     actorIds: ['a2', 'a12'], // 河北, 枫富爱
     description: 'IP社两大王牌共演，圣诞特别企划。',
-    tags: ['共演', '美少女', '圣诞'],
+    tags: createTags(['共演', '美少女', '圣诞']),
     isMultiActor: true
   },
   // 15. PENDING & 无演员关联
@@ -250,7 +257,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: false, censorship: MovieCensorship.CENSORED, rating: 5.0,
     actorIds: [], 
     description: '抓取失败或无演员信息的影片。',
-    tags: ['待整理'],
+    tags: createTags(['待整理']),
     isMultiActor: false
   },
   // 16. 已入库 & 新有菜
@@ -261,7 +268,7 @@ export const MOCK_MOVIES: Movie[] = [
     isFavorite: true, censorship: MovieCensorship.CENSORED, rating: 9.1,
     actorIds: ['a5'], // 新有菜
     description: '新有菜 完美身材展示。',
-    tags: ['美腿', '高挑', 'S1'],
+    tags: createTags(['美腿', '高挑', 'S1']),
     isMultiActor: false
   }
 ];

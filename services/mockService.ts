@@ -1,4 +1,4 @@
-import { Movie, Actor, MovieStatus, SehuatangData, PageResponse, DashboardStats, ActorStatus, MovieCensorship } from '../types';
+import { Movie, Actor, MovieStatus, SehuatangData, PageResponse, DashboardStats, ActorStatus, MovieCensorship, Tag } from '../types';
 import { MOCK_MOVIES, MOCK_ACTORS, MOCK_SEHUATANG_DATA } from './mockData';
 
 // 配置后端 API 地址
@@ -7,7 +7,7 @@ const API_BASE_URL = 'http://localhost:8080/api';
 interface MovieFilterParams {
     searchTerm?: string;
     searchActor?: string;
-    actorId?: string; // Added: Filter by specific actor ID
+    actorId?: string; 
     searchTag?: string;
     status?: string;
     censorship?: string;
@@ -55,10 +55,6 @@ export const mockService = {
 
   // 获取仪表盘统计数据
   getDashboardStats: async (): Promise<DashboardStats> => {
-      // --- REAL BACKEND CALL ---
-      // const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
-      // return await response.json();
-
       return new Promise((resolve) => {
           const movies = MOCK_MOVIES;
           const actors = MOCK_ACTORS;
@@ -77,25 +73,14 @@ export const mockService = {
               censoredMovies: movies.filter(m => m.censorship === MovieCensorship.CENSORED).length,
               uncensoredMovies: movies.filter(m => m.censorship === MovieCensorship.UNCENSORED).length
           };
-          
           setTimeout(() => resolve(stats), 400);
       });
   },
 
-  // 获取影片列表 (分页 + 筛选)
   getMovies: async (page: number = 1, size: number = 12, filters: MovieFilterParams = {}): Promise<PageResponse<Movie>> => {
-    // --- REAL BACKEND CALL ---
-    // try {
-    //   const params = new URLSearchParams({ page: (page-1).toString(), size: size.toString(), ...filters });
-    //   const response = await fetch(`${API_BASE_URL}/movies?${params}`);
-    //   return await response.json();
-    // } catch (error) { ... }
-
-    // --- MOCK DATA LOGIC ---
     return new Promise((resolve) => {
         let filtered = [...MOCK_MOVIES];
 
-        // 1. Filter Logic
         if (filters.startDate) filtered = filtered.filter(m => m.releaseDate >= filters.startDate!);
         if (filters.endDate) filtered = filtered.filter(m => m.releaseDate <= filters.endDate!);
 
@@ -122,7 +107,6 @@ export const mockService = {
              if (filters.inNas === 'NO') filtered = filtered.filter(m => !m.inNas);
         }
 
-        // Search Term
         if (filters.searchTerm) {
             const term = filters.searchTerm.toLowerCase();
             filtered = filtered.filter(m => 
@@ -135,18 +119,15 @@ export const mockService = {
             );
         }
 
-        // Search Tag
         if (filters.searchTag) {
              const tag = filters.searchTag.toLowerCase();
-             filtered = filtered.filter(m => m.tags.some(t => t.toLowerCase().includes(tag)));
+             filtered = filtered.filter(m => m.tags.some(t => t.name.toLowerCase().includes(tag)));
         }
 
-        // Filter by specific Actor ID (Exact match in array)
         if (filters.actorId) {
             filtered = filtered.filter(m => m.actorIds.includes(filters.actorId!));
         }
 
-        // Search Actor Name (Text search)
         if (filters.searchActor) {
             const actorTerm = filters.searchActor.toLowerCase();
             const matchedActorIds = MOCK_ACTORS
@@ -155,7 +136,6 @@ export const mockService = {
             filtered = filtered.filter(m => m.actorIds.some(id => matchedActorIds.includes(id)));
         }
 
-        // 2. Pagination Logic
         const totalElements = filtered.length;
         const totalPages = Math.ceil(totalElements / size);
         const startIndex = (page - 1) * size;
@@ -171,12 +151,7 @@ export const mockService = {
     });
   },
 
-  // 获取色花堂数据 (分页 + 筛选)
   getSehuatangData: async (page: number = 1, size: number = 12, filters: SehuatangFilterParams = {}): Promise<PageResponse<SehuatangData>> => {
-      // --- REAL BACKEND CALL ---
-      // ...
-
-      // --- MOCK DATA LOGIC ---
       return new Promise((resolve) => {
           let filtered = [...MOCK_SEHUATANG_DATA];
 
@@ -211,7 +186,6 @@ export const mockService = {
               checkBool(filters.isFavoriteActor, item.isActorFavorite)
           );
 
-          // Pagination
           const totalElements = filtered.length;
           const totalPages = Math.ceil(totalElements / size);
           const startIndex = (page - 1) * size;
@@ -227,13 +201,7 @@ export const mockService = {
       });
   },
 
-  // 获取演员列表 (分页 + 筛选)
   getActors: async (page: number = 1, size: number = 12, filters: ActorFilterParams = {}): Promise<PageResponse<Actor>> => {
-      // --- REAL BACKEND CALL ---
-      // const params = new URLSearchParams({ page: (page-1).toString(), size: size.toString(), ...filters });
-      // const response = await fetch(`${API_BASE_URL}/actors?${params}`);
-      
-      // --- MOCK DATA LOGIC ---
       return new Promise((resolve) => {
           let filtered = [...MOCK_ACTORS];
 
@@ -251,7 +219,6 @@ export const mockService = {
               if (filters.isFavorite === 'NO') filtered = filtered.filter(a => !a.isFavorite);
           }
 
-          // Strict birth date filtering (must have birth date to be included in range)
           if (filters.startBirthDate) {
               filtered = filtered.filter(a => a.birthDate && a.birthDate >= filters.startBirthDate!);
           }
@@ -308,6 +275,35 @@ export const mockService = {
       });
   },
 
+  toggleActorFavorite: async (id: string): Promise<void> => {
+      return new Promise((resolve) => {
+          const actor = MOCK_ACTORS.find(a => a.id === id);
+          if (actor) actor.isFavorite = !actor.isFavorite;
+          setTimeout(() => resolve(), 300);
+      });
+  },
+
+  updateActor: async (id: string, updates: Partial<Actor>): Promise<void> => {
+      return new Promise((resolve) => {
+          const actor = MOCK_ACTORS.find(a => a.id === id);
+          if (actor) {
+              Object.assign(actor, updates);
+          }
+          setTimeout(() => resolve(), 300);
+      });
+  },
+
+  // NEW METHOD: Toggle Sehuatang Ignore Status
+  toggleSehuatangIgnore: async (id: string): Promise<void> => {
+      return new Promise((resolve) => {
+          const item = MOCK_SEHUATANG_DATA.find(d => d.id === id);
+          if (item) {
+              item.isIgnoredMovie = !item.isIgnoredMovie;
+          }
+          setTimeout(() => resolve(), 300);
+      });
+  },
+
   getAllSehuatangData: async (): Promise<SehuatangData[]> => {
       return new Promise((resolve) => {
           setTimeout(() => resolve([...MOCK_SEHUATANG_DATA]), 500);
@@ -334,18 +330,13 @@ export const mockService = {
   },
 
   getTags: async (actorId?: string): Promise<string[]> => {
-      // --- REAL BACKEND CALL ---
-      // const params = actorId ? `?actorId=${actorId}` : '';
-      // const response = await fetch(`${API_BASE_URL}/movies/tags${params}`);
-      // return await response.json();
-
       return new Promise((resolve) => {
           let targetMovies = MOCK_MOVIES;
           if (actorId) {
               targetMovies = targetMovies.filter(m => m.actorIds.includes(actorId));
           }
-          const allTags = Array.from(new Set(targetMovies.flatMap(m => m.tags || [])));
-          setTimeout(() => resolve(allTags), 300);
+          const allTagNames = Array.from(new Set(targetMovies.flatMap(m => m.tags.map(t => t.name))));
+          setTimeout(() => resolve(allTagNames), 300);
       });
   }
 };

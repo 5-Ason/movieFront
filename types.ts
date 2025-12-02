@@ -37,6 +37,7 @@ export interface Actor {
 }
 
 export interface Magnet {
+  id: string; // Added ID
   title: string;
   size: string;
   date: string;
@@ -76,6 +77,11 @@ export interface SehuatangData {
   coverUrl?: string;          // 封面图片
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+}
+
 export interface Movie {
   id: string;
   title: string; // 番号 (例如 SSNI-888)
@@ -109,7 +115,7 @@ export interface Movie {
   rating: number; // 0-10
   actorIds: string[];
   description: string; // 影片完整标题
-  tags: string[]; // 类别/标签
+  tags: Tag[]; // Changed from string[] to Tag[]
   magnets?: Magnet[]; // 磁力链接列表
   
   // Renamed property
