@@ -1,0 +1,5 @@
+{
+  "name": "MovieVault",
+  "description": "A sleek movie collection management dashboard designed to be served by Spring Boot. Features actor tracking, library status management, and collection statistics.",
+  "requestFramePermissions": []
+}
