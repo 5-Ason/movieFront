@@ -2,8 +2,9 @@ import { Movie, Actor, MovieStatus, SehuatangData, ApiResponse, PageResult, Dash
 import { MOCK_MOVIES, MOCK_ACTORS, MOCK_SEHUATANG_DATA } from './mockData';
 
 // 配置后端 API 地址
-//const API_BASE_URL = 'http://localhost:3334/api';
-const API_BASE_URL = 'https://4a36c8d5.r11.cpolar.top/api';
+// const API_BASE_URL = 'http://localhost:3334/api'; // Commented out to avoid confusion
+const API_BASE_URL = 'https://mock-api.local/api'; // Placeholder
+
 // ... (Filter Interfaces unchanged)
 interface MovieFilterParams {
     searchTerm?: string;
@@ -120,9 +121,9 @@ export const mockService = {
    * 对应后端 API: GET /api/movies
    */
   getMovies: async (page: number = 1, size: number = 12, filters: MovieFilterParams = {}): Promise<ApiResponse<PageResult<Movie>>> => {
-    // --- REAL BACKEND CALL ---
+    // --- REAL BACKEND CALL (Commented out to prevent network errors in mock mode) ---
+    /*
     try {
-        // Map 'page' to 'current' for backend
         const queryParams = buildQueryString({ 
             current: page, 
             size, 
@@ -138,81 +139,82 @@ export const mockService = {
         return await response.json();
     } catch (error) {
         console.error("Failed to fetch movies from backend, falling back to mock data:", error);
-        // return Promise.reject(error); // Uncomment to fail hard, or keep below for fallback
-        
-        // --- MOCK DATA LOGIC FALLBACK ---
-        return new Promise((resolve) => {
-            let filtered = [...MOCK_MOVIES];
-
-            if (filters.startDate) filtered = filtered.filter(m => m.releaseDate >= filters.startDate!);
-            if (filters.endDate) filtered = filtered.filter(m => m.releaseDate <= filters.endDate!);
-
-            if (filters.status && filters.status !== 'ALL') filtered = filtered.filter(m => m.status === filters.status);
-            if (filters.censorship && filters.censorship !== 'ALL') filtered = filtered.filter(m => m.censorship === filters.censorship);
-            
-            if (filters.isFavorite && filters.isFavorite !== 'ALL') {
-                if (filters.isFavorite === 'YES') filtered = filtered.filter(m => m.isFavorite);
-                if (filters.isFavorite === 'NO') filtered = filtered.filter(m => !m.isFavorite);
-            }
-            
-            if (filters.hasSehuatang && filters.hasSehuatang !== 'ALL') {
-                if (filters.hasSehuatang === 'YES') filtered = filtered.filter(m => m.sehuatangData && m.sehuatangData.length > 0);
-                else filtered = filtered.filter(m => !m.sehuatangData || m.sehuatangData.length === 0);
-            }
-
-            if (filters.in115 && filters.in115 !== 'ALL') {
-                 if (filters.in115 === 'YES') filtered = filtered.filter(m => m.in115);
-                 if (filters.in115 === 'NO') filtered = filtered.filter(m => !m.in115);
-            }
-
-            if (filters.inNas && filters.inNas !== 'ALL') {
-                 if (filters.inNas === 'YES') filtered = filtered.filter(m => m.inNas);
-                 if (filters.inNas === 'NO') filtered = filtered.filter(m => !m.inNas);
-            }
-
-            if (filters.searchTerm) {
-                const term = filters.searchTerm.toLowerCase();
-                filtered = filtered.filter(m => 
-                    m.title.toLowerCase().includes(term) || 
-                    m.description.toLowerCase().includes(term) ||
-                    (m.transTitle && m.transTitle.toLowerCase().includes(term)) ||
-                    m.director.toLowerCase().includes(term) ||
-                    m.studio.toLowerCase().includes(term) ||
-                    (m.series && m.series.toLowerCase().includes(term))
-                );
-            }
-
-            if (filters.searchTag) {
-                 const tag = filters.searchTag.toLowerCase();
-                 filtered = filtered.filter(m => m.tags.some(t => t.name.toLowerCase().includes(tag)));
-            }
-
-            if (filters.actorId) {
-                filtered = filtered.filter(m => m.actorIds.includes(filters.actorId!));
-            }
-
-            if (filters.searchActor) {
-                const actorTerm = filters.searchActor.toLowerCase();
-                const matchedActorIds = MOCK_ACTORS
-                    .filter(a => a.name.toLowerCase().includes(actorTerm))
-                    .map(a => a.id);
-                filtered = filtered.filter(m => m.actorIds.some(id => matchedActorIds.includes(id)));
-            }
-
-            const total = filtered.length;
-            const totalPages = Math.ceil(total / size);
-            const startIndex = (page - 1) * size;
-            const records = filtered.slice(startIndex, startIndex + size);
-
-            setTimeout(() => resolve(success({
-                records,
-                total,
-                pages: totalPages,
-                current: page,
-                size
-            })), 500);
-        });
+        // Fallback to mock logic below
     }
+    */
+
+    // --- MOCK DATA LOGIC ---
+    return new Promise((resolve) => {
+        let filtered = [...MOCK_MOVIES];
+
+        if (filters.startDate) filtered = filtered.filter(m => m.releaseDate >= filters.startDate!);
+        if (filters.endDate) filtered = filtered.filter(m => m.releaseDate <= filters.endDate!);
+
+        if (filters.status && filters.status !== 'ALL') filtered = filtered.filter(m => m.status === filters.status);
+        if (filters.censorship && filters.censorship !== 'ALL') filtered = filtered.filter(m => m.censorship === filters.censorship);
+        
+        if (filters.isFavorite && filters.isFavorite !== 'ALL') {
+            if (filters.isFavorite === 'YES') filtered = filtered.filter(m => m.isFavorite);
+            if (filters.isFavorite === 'NO') filtered = filtered.filter(m => !m.isFavorite);
+        }
+        
+        if (filters.hasSehuatang && filters.hasSehuatang !== 'ALL') {
+            if (filters.hasSehuatang === 'YES') filtered = filtered.filter(m => m.sehuatangData && m.sehuatangData.length > 0);
+            else filtered = filtered.filter(m => !m.sehuatangData || m.sehuatangData.length === 0);
+        }
+
+        if (filters.in115 && filters.in115 !== 'ALL') {
+             if (filters.in115 === 'YES') filtered = filtered.filter(m => m.in115);
+             if (filters.in115 === 'NO') filtered = filtered.filter(m => !m.in115);
+        }
+
+        if (filters.inNas && filters.inNas !== 'ALL') {
+             if (filters.inNas === 'YES') filtered = filtered.filter(m => m.inNas);
+             if (filters.inNas === 'NO') filtered = filtered.filter(m => !m.inNas);
+        }
+
+        if (filters.searchTerm) {
+            const term = filters.searchTerm.toLowerCase();
+            filtered = filtered.filter(m => 
+                m.title.toLowerCase().includes(term) || 
+                m.description.toLowerCase().includes(term) ||
+                (m.transTitle && m.transTitle.toLowerCase().includes(term)) ||
+                m.director.toLowerCase().includes(term) ||
+                m.studio.toLowerCase().includes(term) ||
+                (m.series && m.series.toLowerCase().includes(term))
+            );
+        }
+
+        if (filters.searchTag) {
+             const tag = filters.searchTag.toLowerCase();
+             filtered = filtered.filter(m => m.tags.some(t => t.name.toLowerCase().includes(tag)));
+        }
+
+        if (filters.actorId) {
+            filtered = filtered.filter(m => m.actorIds.includes(filters.actorId!));
+        }
+
+        if (filters.searchActor) {
+            const actorTerm = filters.searchActor.toLowerCase();
+            const matchedActorIds = MOCK_ACTORS
+                .filter(a => a.name.toLowerCase().includes(actorTerm))
+                .map(a => a.id);
+            filtered = filtered.filter(m => m.actorIds.some(id => matchedActorIds.includes(id)));
+        }
+
+        const total = filtered.length;
+        const totalPages = Math.ceil(total / size);
+        const startIndex = (page - 1) * size;
+        const records = filtered.slice(startIndex, startIndex + size);
+
+        setTimeout(() => resolve(success({
+            records,
+            total,
+            pages: totalPages,
+            current: page,
+            size
+        })), 500);
+    });
   },
 
   /**
@@ -346,7 +348,7 @@ export const mockService = {
    * 对应后端 API: GET /api/movies/{id}
    */
   getMovieById: async (id: string): Promise<ApiResponse<Movie | undefined>> => {
-    // --- REAL BACKEND CALL ---
+    // --- REAL BACKEND CALL (Commented out) ---
     /*
     try {
         const response = await fetch(`${API_BASE_URL}/movies/${id}`);
