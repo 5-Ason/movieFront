@@ -8,7 +8,6 @@ import { MovieDetailModal } from '../components/MovieDetailModal';
 export const Movies: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   
-  // Pagination State
   const [page, setPage] = useState(1);
   const [pageSize] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
@@ -16,7 +15,6 @@ export const Movies: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [jumpPage, setJumpPage] = useState('');
 
-  // Filter State
   const [filterStatus, setFilterStatus] = useState<MovieStatus | 'ALL'>('ALL');
   const [filterCensorship, setFilterCensorship] = useState<MovieCensorship | 'ALL'>('ALL');
   const [filterHasSehuatang, setFilterHasSehuatang] = useState<'ALL' | 'YES' | 'NO'>('ALL'); 
@@ -33,7 +31,7 @@ export const Movies: React.FC = () => {
   const [availableTags, setAvailableTags] = useState<string[]>([]);
 
   useEffect(() => {
-    mockService.getTags().then(setAvailableTags);
+    mockService.getTags().then(res => setAvailableTags(res.data));
     fetchMovies(1); 
   }, []);
 
@@ -48,10 +46,10 @@ export const Movies: React.FC = () => {
       };
 
       const result = await mockService.getMovies(pageToFetch, pageSize, filters);
-      setMovies(result.content);
-      setTotalPages(result.totalPages);
-      setTotalElements(result.totalElements);
-      setPage(result.number);
+      setMovies(result.data.records);
+      setTotalPages(result.data.pages);
+      setTotalElements(result.data.total);
+      setPage(result.data.current);
       setLoading(false);
   };
 
@@ -104,9 +102,12 @@ export const Movies: React.FC = () => {
       });
   };
 
+  const closeModal = () => {
+      setSelectedMovie(null);
+  };
+
   return (
     <div className="space-y-6 relative pb-20">
-      {/* Header & Filters */}
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white">影片库</h1>
@@ -114,7 +115,6 @@ export const Movies: React.FC = () => {
         </div>
         
         <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
-          {/* Row 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
              <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="text" placeholder="搜索番号、标题..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
              <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="text" placeholder="搜索演员..." value={searchActor} onChange={(e) => setSearchActor(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
@@ -122,7 +122,6 @@ export const Movies: React.FC = () => {
              <div className="relative"><Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none" /></div>
           </div>
 
-          {/* Row 2 */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
              <div className="relative">
                 <Tag className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
@@ -140,14 +139,12 @@ export const Movies: React.FC = () => {
              <button onClick={resetFilters} className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded-lg transition-colors border border-slate-600"><RotateCcw size={14} /> 重置</button>
           </div>
 
-          {/* Row 3 */}
           <div className="flex justify-end pt-2 border-t border-slate-700">
               <button onClick={handleSearch} className="w-full md:w-auto px-8 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30"><Search size={20} /> 立即查询</button>
           </div>
         </div>
       </div>
 
-      {/* Content */}
       {loading ? (
           <div className="flex justify-center py-20"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div></div>
       ) : (
@@ -166,7 +163,6 @@ export const Movies: React.FC = () => {
       
       {!loading && movies.length === 0 && <div className="text-center py-20 text-slate-500"><p>未找到相关影片，请调整筛选条件后重试。</p></div>}
 
-      {/* Pagination */}
       {!loading && movies.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8 bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
               <div className="flex items-center gap-4">
@@ -183,11 +179,10 @@ export const Movies: React.FC = () => {
           </div>
       )}
 
-      {/* Modal */}
       {selectedMovie && (
           <MovieDetailModal 
               movie={selectedMovie} 
-              onClose={() => setSelectedMovie(null)}
+              onClose={closeModal}
               onToggleFavorite={toggleFavorite}
               onUpdateStatus={updateStatus}
           />

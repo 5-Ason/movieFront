@@ -9,7 +9,6 @@ export const Actors: React.FC = () => {
   const [actors, setActors] = useState<Actor[]>([]);
   const [loading, setLoading] = useState(false);
   
-  // ... (Pagination & Filters for Actors state - Unchanged)
   const [page, setPage] = useState(1);
   const [pageSize] = useState(12);
   const [totalPages, setTotalPages] = useState(1);
@@ -22,10 +21,8 @@ export const Actors: React.FC = () => {
   const [startBirthDate, setStartBirthDate] = useState('');
   const [endBirthDate, setEndBirthDate] = useState('');
 
-  // Detail Modal
   const [selectedActor, setSelectedActor] = useState<Actor | null>(null);
   
-  // Movie States
   const [actorMovies, setActorMovies] = useState<Movie[]>([]);
   const [actorMoviesLoading, setActorMoviesLoading] = useState(false);
   const [moviePage, setMoviePage] = useState(1);
@@ -34,10 +31,8 @@ export const Actors: React.FC = () => {
   const [movieTotalElements, setMovieTotalElements] = useState(0);
   const [movieJumpPage, setMovieJumpPage] = useState('');
 
-  // Nested Modal
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  // Internal Filters
   const [movieSearch, setMovieSearch] = useState('');
   const [movieSearchTag, setMovieSearchTag] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -51,7 +46,6 @@ export const Actors: React.FC = () => {
 
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   
-  // Editing State
   const [isEditing, setIsEditing] = useState(false);
   const [editStatus, setEditStatus] = useState<ActorStatus>(ActorStatus.ACTIVE);
   const [editBirthDate, setEditBirthDate] = useState('');
@@ -61,18 +55,16 @@ export const Actors: React.FC = () => {
 
   useEffect(() => {
     if (selectedActor) {
-      // Reset filters
       setMovieSearch(''); setMovieSearchTag(''); setStartDate(''); setEndDate('');
       setMovieFilterStatus('ALL'); setFilterCensorship('ALL'); setFilter115('ALL'); setFilterNas('ALL'); setFilterFavoriteMovie('ALL'); setFilterHasSehuatang('ALL');
       setMoviePage(1);
       
-      // Reset editing
       setIsEditing(false);
       setEditStatus(selectedActor.status);
       setEditBirthDate(selectedActor.birthDate || '');
       setEditProfile(selectedActor.profile || '');
 
-      mockService.getTags(selectedActor.id).then(setAvailableTags);
+      mockService.getTags(selectedActor.id).then(res => setAvailableTags(res.data));
       fetchActorMovies(selectedActor.id, 1);
     }
   }, [selectedActor]);
@@ -81,7 +73,7 @@ export const Actors: React.FC = () => {
       setLoading(true);
       const filters = { searchTerm, status: filterStatus, isFavorite: filterFavorite, startBirthDate, endBirthDate };
       const result = await mockService.getActors(pageToFetch, pageSize, filters);
-      setActors(result.content); setTotalPages(result.totalPages); setTotalElements(result.totalElements); setPage(result.number); setLoading(false);
+      setActors(result.data.records); setTotalPages(result.data.pages); setTotalElements(result.data.total); setPage(result.data.current); setLoading(false);
   };
 
   const fetchActorMovies = async (actorId: string, pageToFetch: number, overrideFilters?: any) => {
@@ -92,10 +84,10 @@ export const Actors: React.FC = () => {
           isFavorite: filterFavoriteMovie, hasSehuatang: filterHasSehuatang, startDate, endDate
       };
       const result = await mockService.getMovies(pageToFetch, moviePageSize, filters);
-      setActorMovies(result.content); setMovieTotalPages(result.totalPages); setMovieTotalElements(result.totalElements); setMoviePage(result.number); setActorMoviesLoading(false);
+      setActorMovies(result.data.records); setMovieTotalPages(result.data.pages); setMovieTotalElements(result.data.total); setMoviePage(result.data.current); setActorMoviesLoading(false);
   };
 
-  // Handlers (Shortened for brevity, logic same as before)
+  // Handlers 
   const handleSearch = () => fetchActors(1);
   const handlePageChange = (p: number) => { if (p >= 1 && p <= totalPages) { fetchActors(p); setJumpPage(''); } };
   const handleJumpToPage = () => { const p = parseInt(jumpPage); if (!isNaN(p)) handlePageChange(p); };
@@ -147,7 +139,7 @@ export const Actors: React.FC = () => {
 
   return (
     <div className="space-y-6 h-full flex flex-col pb-20 relative">
-      {/* ... Header & Filters (Keeping full layout as requested in previous prompts, omitted for brevity but assumed present) ... */}
+      {/* ... Content ... */}
       <div className="flex flex-col gap-4 flex-shrink-0">
         <div><h1 className="text-3xl font-bold text-white">演职人员</h1><p className="text-slate-400">浏览演员及其参演作品 ({totalElements} 名)</p></div>
         <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
@@ -155,14 +147,13 @@ export const Actors: React.FC = () => {
                  <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="text" placeholder="搜索演员姓名..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
                  <div className="relative"><Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="date" placeholder="出生日期起" value={startBirthDate} onChange={(e) => setStartBirthDate(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none" /></div>
                  <div className="relative"><Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} /><input type="date" placeholder="出生日期止" value={endBirthDate} onChange={(e) => setEndBirthDate(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 appearance-none" /></div>
-                 <div className="relative"><select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as any)} className="w-full appearance-none pl-4 pr-8 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"><option value="ALL">全部状态</option><option value={ActorStatus.ACTIVE}>在籍</option><option value={ActorStatus.RETIRED}>退役</option></select><Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} /></div>
-                 <div className="relative"><select value={filterFavorite} onChange={(e) => setFilterFavorite(e.target.value as any)} className="w-full appearance-none pl-4 pr-8 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"><option value="ALL">全部演员</option><option value="YES">已收藏</option><option value="NO">未收藏</option></select><Heart className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} /></div>
+                 <div className="relative"><select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as ActorStatus | 'ALL')} className="w-full appearance-none pl-4 pr-8 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"><option value="ALL">全部状态</option><option value={ActorStatus.ACTIVE}>在籍</option><option value={ActorStatus.RETIRED}>退役</option></select><Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} /></div>
+                 <div className="relative"><select value={filterFavorite} onChange={(e) => setFilterFavorite(e.target.value as 'ALL' | 'YES' | 'NO')} className="w-full appearance-none pl-4 pr-8 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"><option value="ALL">全部演员</option><option value="YES">已收藏</option><option value="NO">未收藏</option></select><Heart className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} /></div>
              </div>
              <div className="flex justify-end pt-2 border-t border-slate-700"><button onClick={handleSearch} className="w-full md:w-auto px-8 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/30"><Search size={20} /> 立即查询</button></div>
         </div>
       </div>
 
-      {/* Actor Grid */}
       <div className="flex flex-1 gap-6 overflow-hidden relative">
         {loading ? <div className="w-full h-full flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div></div> : (
             <div className="flex-1 overflow-y-auto pr-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 content-start">
@@ -184,7 +175,6 @@ export const Actors: React.FC = () => {
         )}
       </div>
 
-      {/* Pagination */}
       {!loading && actors.length > 0 && (
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-auto bg-slate-800/50 p-4 rounded-xl border border-slate-700/50 flex-shrink-0">
               <div className="flex items-center gap-4"><button onClick={() => handlePageChange(page - 1)} disabled={page === 1} className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-700"><ChevronLeft size={20} /></button><span className="text-slate-400 text-sm">第 <span className="text-white font-bold">{page}</span> 页，共 {totalPages} 页</span><button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed border border-slate-700"><ChevronRight size={20} /></button></div>
@@ -192,7 +182,6 @@ export const Actors: React.FC = () => {
           </div>
       )}
 
-      {/* Actor Detail Modal */}
       {selectedActor && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedActor(null)}>
              <div className="bg-slate-900 w-full max-w-7xl max-h-[95vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row border border-slate-700" onClick={e => e.stopPropagation()}>
@@ -262,7 +251,6 @@ export const Actors: React.FC = () => {
           </div>
       )}
 
-      {/* Nested Movie Modal */}
       {selectedMovie && <MovieDetailModal movie={selectedMovie} onClose={() => setSelectedMovie(null)} onToggleFavorite={toggleMovieFavorite} onUpdateStatus={updateMovieStatus} />}
     </div>
   );

@@ -1,9 +1,10 @@
-import { Movie, Actor, MovieStatus, SehuatangData, PageResponse, DashboardStats, ActorStatus, MovieCensorship, Tag } from '../types';
+import { Movie, Actor, MovieStatus, SehuatangData, ApiResponse, PageResult, DashboardStats, ActorStatus, MovieCensorship, Tag } from '../types';
 import { MOCK_MOVIES, MOCK_ACTORS, MOCK_SEHUATANG_DATA } from './mockData';
 
 // 配置后端 API 地址
-const API_BASE_URL = 'http://localhost:8080/api';
-
+//const API_BASE_URL = 'http://localhost:3334/api';
+const API_BASE_URL = 'https://4a36c8d5.r11.cpolar.top/api';
+// ... (Filter Interfaces unchanged)
 interface MovieFilterParams {
     searchTerm?: string;
     searchActor?: string;
@@ -44,6 +45,18 @@ interface ActorFilterParams {
     endBirthDate?: string;
 }
 
+// 辅助函数：构建查询字符串，过滤空值
+const buildQueryString = (params: any) => {
+    const query = new URLSearchParams();
+    Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null && params[key] !== '' && params[key] !== 'ALL') {
+            query.append(key, params[key]);
+        }
+    });
+    return query.toString();
+};
+
+// 辅助函数：检查布尔筛选条件 (Mock逻辑用)
 const checkBool = (filter: string | undefined, value: boolean) => {
     if (!filter || filter === 'ALL') return true;
     if (filter === 'YES') return value === true;
@@ -51,10 +64,35 @@ const checkBool = (filter: string | undefined, value: boolean) => {
     return true;
 };
 
+// 辅助函数：封装统一的 API 成功响应结构 (Mock逻辑用)
+const success = <T>(data: T): ApiResponse<T> => {
+    return {
+        code: 200,
+        msg: '操作成功',
+        data
+    };
+};
+
 export const mockService = {
 
-  // 获取仪表盘统计数据
-  getDashboardStats: async (): Promise<DashboardStats> => {
+  /**
+   * 获取仪表盘统计数据
+   * 对应后端 API: GET /api/dashboard/stats
+   */
+  getDashboardStats: async (): Promise<ApiResponse<DashboardStats>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      try {
+        const response = await fetch(`${API_BASE_URL}/dashboard/stats`);
+        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+        return await response.json();
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+        throw error; 
+      }
+      */
+
+      // --- MOCK DATA LOGIC ---
       return new Promise((resolve) => {
           const movies = MOCK_MOVIES;
           const actors = MOCK_ACTORS;
@@ -73,85 +111,129 @@ export const mockService = {
               censoredMovies: movies.filter(m => m.censorship === MovieCensorship.CENSORED).length,
               uncensoredMovies: movies.filter(m => m.censorship === MovieCensorship.UNCENSORED).length
           };
-          setTimeout(() => resolve(stats), 400);
+          setTimeout(() => resolve(success(stats)), 400);
       });
   },
 
-  getMovies: async (page: number = 1, size: number = 12, filters: MovieFilterParams = {}): Promise<PageResponse<Movie>> => {
-    return new Promise((resolve) => {
-        let filtered = [...MOCK_MOVIES];
-
-        if (filters.startDate) filtered = filtered.filter(m => m.releaseDate >= filters.startDate!);
-        if (filters.endDate) filtered = filtered.filter(m => m.releaseDate <= filters.endDate!);
-
-        if (filters.status && filters.status !== 'ALL') filtered = filtered.filter(m => m.status === filters.status);
-        if (filters.censorship && filters.censorship !== 'ALL') filtered = filtered.filter(m => m.censorship === filters.censorship);
+  /**
+   * 获取影片列表 (支持分页和多条件筛选)
+   * 对应后端 API: GET /api/movies
+   */
+  getMovies: async (page: number = 1, size: number = 12, filters: MovieFilterParams = {}): Promise<ApiResponse<PageResult<Movie>>> => {
+    // --- REAL BACKEND CALL ---
+    try {
+        // Map 'page' to 'current' for backend
+        const queryParams = buildQueryString({ 
+            current: page, 
+            size, 
+            ...filters 
+        });
         
-        if (filters.isFavorite && filters.isFavorite !== 'ALL') {
-            if (filters.isFavorite === 'YES') filtered = filtered.filter(m => m.isFavorite);
-            if (filters.isFavorite === 'NO') filtered = filtered.filter(m => !m.isFavorite);
+        const response = await fetch(`${API_BASE_URL}/movies?${queryParams}`);
+        
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status} ${response.statusText}`);
         }
         
-        if (filters.hasSehuatang && filters.hasSehuatang !== 'ALL') {
-            if (filters.hasSehuatang === 'YES') filtered = filtered.filter(m => m.sehuatangData && m.sehuatangData.length > 0);
-            else filtered = filtered.filter(m => !m.sehuatangData || m.sehuatangData.length === 0);
-        }
+        return await response.json();
+    } catch (error) {
+        console.error("Failed to fetch movies from backend, falling back to mock data:", error);
+        // return Promise.reject(error); // Uncomment to fail hard, or keep below for fallback
+        
+        // --- MOCK DATA LOGIC FALLBACK ---
+        return new Promise((resolve) => {
+            let filtered = [...MOCK_MOVIES];
 
-        if (filters.in115 && filters.in115 !== 'ALL') {
-             if (filters.in115 === 'YES') filtered = filtered.filter(m => m.in115);
-             if (filters.in115 === 'NO') filtered = filtered.filter(m => !m.in115);
-        }
+            if (filters.startDate) filtered = filtered.filter(m => m.releaseDate >= filters.startDate!);
+            if (filters.endDate) filtered = filtered.filter(m => m.releaseDate <= filters.endDate!);
 
-        if (filters.inNas && filters.inNas !== 'ALL') {
-             if (filters.inNas === 'YES') filtered = filtered.filter(m => m.inNas);
-             if (filters.inNas === 'NO') filtered = filtered.filter(m => !m.inNas);
-        }
+            if (filters.status && filters.status !== 'ALL') filtered = filtered.filter(m => m.status === filters.status);
+            if (filters.censorship && filters.censorship !== 'ALL') filtered = filtered.filter(m => m.censorship === filters.censorship);
+            
+            if (filters.isFavorite && filters.isFavorite !== 'ALL') {
+                if (filters.isFavorite === 'YES') filtered = filtered.filter(m => m.isFavorite);
+                if (filters.isFavorite === 'NO') filtered = filtered.filter(m => !m.isFavorite);
+            }
+            
+            if (filters.hasSehuatang && filters.hasSehuatang !== 'ALL') {
+                if (filters.hasSehuatang === 'YES') filtered = filtered.filter(m => m.sehuatangData && m.sehuatangData.length > 0);
+                else filtered = filtered.filter(m => !m.sehuatangData || m.sehuatangData.length === 0);
+            }
 
-        if (filters.searchTerm) {
-            const term = filters.searchTerm.toLowerCase();
-            filtered = filtered.filter(m => 
-                m.title.toLowerCase().includes(term) || 
-                m.description.toLowerCase().includes(term) ||
-                (m.transTitle && m.transTitle.toLowerCase().includes(term)) ||
-                m.director.toLowerCase().includes(term) ||
-                m.studio.toLowerCase().includes(term) ||
-                (m.series && m.series.toLowerCase().includes(term))
-            );
-        }
+            if (filters.in115 && filters.in115 !== 'ALL') {
+                 if (filters.in115 === 'YES') filtered = filtered.filter(m => m.in115);
+                 if (filters.in115 === 'NO') filtered = filtered.filter(m => !m.in115);
+            }
 
-        if (filters.searchTag) {
-             const tag = filters.searchTag.toLowerCase();
-             filtered = filtered.filter(m => m.tags.some(t => t.name.toLowerCase().includes(tag)));
-        }
+            if (filters.inNas && filters.inNas !== 'ALL') {
+                 if (filters.inNas === 'YES') filtered = filtered.filter(m => m.inNas);
+                 if (filters.inNas === 'NO') filtered = filtered.filter(m => !m.inNas);
+            }
 
-        if (filters.actorId) {
-            filtered = filtered.filter(m => m.actorIds.includes(filters.actorId!));
-        }
+            if (filters.searchTerm) {
+                const term = filters.searchTerm.toLowerCase();
+                filtered = filtered.filter(m => 
+                    m.title.toLowerCase().includes(term) || 
+                    m.description.toLowerCase().includes(term) ||
+                    (m.transTitle && m.transTitle.toLowerCase().includes(term)) ||
+                    m.director.toLowerCase().includes(term) ||
+                    m.studio.toLowerCase().includes(term) ||
+                    (m.series && m.series.toLowerCase().includes(term))
+                );
+            }
 
-        if (filters.searchActor) {
-            const actorTerm = filters.searchActor.toLowerCase();
-            const matchedActorIds = MOCK_ACTORS
-                .filter(a => a.name.toLowerCase().includes(actorTerm))
-                .map(a => a.id);
-            filtered = filtered.filter(m => m.actorIds.some(id => matchedActorIds.includes(id)));
-        }
+            if (filters.searchTag) {
+                 const tag = filters.searchTag.toLowerCase();
+                 filtered = filtered.filter(m => m.tags.some(t => t.name.toLowerCase().includes(tag)));
+            }
 
-        const totalElements = filtered.length;
-        const totalPages = Math.ceil(totalElements / size);
-        const startIndex = (page - 1) * size;
-        const content = filtered.slice(startIndex, startIndex + size);
+            if (filters.actorId) {
+                filtered = filtered.filter(m => m.actorIds.includes(filters.actorId!));
+            }
 
-        setTimeout(() => resolve({
-            content,
-            totalElements,
-            totalPages,
-            number: page,
-            size
-        }), 500);
-    });
+            if (filters.searchActor) {
+                const actorTerm = filters.searchActor.toLowerCase();
+                const matchedActorIds = MOCK_ACTORS
+                    .filter(a => a.name.toLowerCase().includes(actorTerm))
+                    .map(a => a.id);
+                filtered = filtered.filter(m => m.actorIds.some(id => matchedActorIds.includes(id)));
+            }
+
+            const total = filtered.length;
+            const totalPages = Math.ceil(total / size);
+            const startIndex = (page - 1) * size;
+            const records = filtered.slice(startIndex, startIndex + size);
+
+            setTimeout(() => resolve(success({
+                records,
+                total,
+                pages: totalPages,
+                current: page,
+                size
+            })), 500);
+        });
+    }
   },
 
-  getSehuatangData: async (page: number = 1, size: number = 12, filters: SehuatangFilterParams = {}): Promise<PageResponse<SehuatangData>> => {
+  /**
+   * 获取色花堂资源数据 (分页 + 筛选)
+   * 对应后端 API: GET /api/sehuatang
+   */
+  getSehuatangData: async (page: number = 1, size: number = 12, filters: SehuatangFilterParams = {}): Promise<ApiResponse<PageResult<SehuatangData>>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      try {
+        const queryParams = buildQueryString({ page: page, size, ...filters });
+        const response = await fetch(`${API_BASE_URL}/sehuatang?${queryParams}`);
+        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+        return await response.json();
+      } catch (error) {
+        console.error("Failed to fetch sehuatang data:", error);
+        throw error;
+      }
+      */
+
+      // --- MOCK DATA LOGIC ---
       return new Promise((resolve) => {
           let filtered = [...MOCK_SEHUATANG_DATA];
 
@@ -186,22 +268,40 @@ export const mockService = {
               checkBool(filters.isFavoriteActor, item.isActorFavorite)
           );
 
-          const totalElements = filtered.length;
-          const totalPages = Math.ceil(totalElements / size);
+          const total = filtered.length;
+          const totalPages = Math.ceil(total / size);
           const startIndex = (page - 1) * size;
-          const content = filtered.slice(startIndex, startIndex + size);
+          const records = filtered.slice(startIndex, startIndex + size);
 
-          setTimeout(() => resolve({
-              content,
-              totalElements,
-              totalPages,
-              number: page,
+          setTimeout(() => resolve(success({
+              records,
+              total,
+              pages: totalPages,
+              current: page,
               size
-          }), 500);
+          })), 500);
       });
   },
 
-  getActors: async (page: number = 1, size: number = 12, filters: ActorFilterParams = {}): Promise<PageResponse<Actor>> => {
+  /**
+   * 获取演员列表 (分页 + 筛选)
+   * 对应后端 API: GET /api/actors
+   */
+  getActors: async (page: number = 1, size: number = 12, filters: ActorFilterParams = {}): Promise<ApiResponse<PageResult<Actor>>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      try {
+        const queryParams = buildQueryString({ page: page, size, ...filters });
+        const response = await fetch(`${API_BASE_URL}/actors?${queryParams}`);
+        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+        return await response.json();
+      } catch (error) {
+        console.error("Failed to fetch actors:", error);
+        throw error;
+      }
+      */
+
+      // --- MOCK DATA LOGIC ---
       return new Promise((resolve) => {
           let filtered = [...MOCK_ACTORS];
 
@@ -226,98 +326,201 @@ export const mockService = {
               filtered = filtered.filter(a => a.birthDate && a.birthDate <= filters.endBirthDate!);
           }
 
-          const totalElements = filtered.length;
-          const totalPages = Math.ceil(totalElements / size);
+          const total = filtered.length;
+          const totalPages = Math.ceil(total / size);
           const startIndex = (page - 1) * size;
-          const content = filtered.slice(startIndex, startIndex + size);
+          const records = filtered.slice(startIndex, startIndex + size);
 
-          setTimeout(() => resolve({
-              content,
-              totalElements,
-              totalPages,
-              number: page,
+          setTimeout(() => resolve(success({
+              records,
+              total,
+              pages: totalPages,
+              current: page,
               size
-          }), 400);
+          })), 400);
       });
   },
   
-  getMovieById: async (id: string): Promise<Movie | undefined> => {
-    return new Promise((resolve) => setTimeout(() => resolve(MOCK_MOVIES.find(m => m.id === id)), 300));
+  /**
+   * 根据 ID 获取单个影片详情
+   * 对应后端 API: GET /api/movies/{id}
+   */
+  getMovieById: async (id: string): Promise<ApiResponse<Movie | undefined>> => {
+    // --- REAL BACKEND CALL ---
+    /*
+    try {
+        const response = await fetch(`${API_BASE_URL}/movies/${id}`);
+        if (!response.ok) throw new Error('Failed to fetch movie');
+        return await response.json();
+    } catch (e) { console.error(e); return { code: 500, msg: 'Error', data: undefined }; }
+    */
+    return new Promise((resolve) => setTimeout(() => resolve(success(MOCK_MOVIES.find(m => m.id === id))), 300));
   },
 
-  getActorsByMovie: async (movieActorIds: string[]): Promise<Actor[]> => {
+  /**
+   * 根据影片的演员ID列表获取对应的演员信息列表
+   * 对应后端 API: GET /api/actors/batch?ids=1,2,3...
+   */
+  getActorsByMovie: async (movieActorIds: string[]): Promise<ApiResponse<Actor[]>> => {
+     // --- REAL BACKEND CALL (Commented out) ---
+     /*
+     try {
+        const idsParam = movieActorIds.join(',');
+        const response = await fetch(`${API_BASE_URL}/actors/batch?ids=${idsParam}`);
+        return await response.json();
+     } catch (e) { ... }
+     */
      return new Promise((resolve) => {
          const result = MOCK_ACTORS.filter(a => movieActorIds.includes(a.id));
-         setTimeout(() => resolve(result), 300);
+         setTimeout(() => resolve(success(result)), 300);
      });
   },
 
-  getMoviesByActor: async (actorId: string): Promise<Movie[]> => {
+  /**
+   * 根据演员 ID 获取该演员参演的所有影片 (用于内部查询，非分页)
+   * 对应后端 API: GET /api/actors/{id}/movies
+   */
+  getMoviesByActor: async (actorId: string): Promise<ApiResponse<Movie[]>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      try {
+         const response = await fetch(`${API_BASE_URL}/actors/${actorId}/movies`);
+         return await response.json();
+      } catch(e) { ... }
+      */
       return new Promise((resolve) => {
           const result = MOCK_MOVIES.filter(m => m.actorIds.includes(actorId));
-          setTimeout(() => resolve(result), 300);
+          setTimeout(() => resolve(success(result)), 300);
       });
   },
 
-  updateMovieStatus: async (id: string, newStatus: MovieStatus): Promise<void> => {
+  /**
+   * 更新影片状态 (入库、待下载、排除、待处理)
+   * 对应后端 API: PUT /api/movies/{id}/status?status=XXX
+   */
+  updateMovieStatus: async (id: string, newStatus: MovieStatus): Promise<ApiResponse<void>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      await fetch(`${API_BASE_URL}/movies/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ status: newStatus })
+      });
+      */
       return new Promise((resolve) => {
           const movie = MOCK_MOVIES.find(m => m.id === id);
           if (movie) movie.status = newStatus;
-          setTimeout(() => resolve(), 300);
+          setTimeout(() => resolve(success(undefined)), 300);
       });
   },
 
-  toggleMovieFavorite: async (id: string): Promise<void> => {
+  /**
+   * 切换影片收藏状态
+   * 对应后端 API: POST /api/movies/{id}/favorite
+   */
+  toggleMovieFavorite: async (id: string): Promise<ApiResponse<void>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      await fetch(`${API_BASE_URL}/movies/${id}/favorite`, { method: 'POST' });
+      */
       return new Promise((resolve) => {
           const movie = MOCK_MOVIES.find(m => m.id === id);
           if (movie) movie.isFavorite = !movie.isFavorite;
-          setTimeout(() => resolve(), 300);
+          setTimeout(() => resolve(success(undefined)), 300);
       });
   },
 
-  toggleActorFavorite: async (id: string): Promise<void> => {
+  /**
+   * 切换演员收藏状态
+   * 对应后端 API: POST /api/actors/{id}/favorite
+   */
+  toggleActorFavorite: async (id: string): Promise<ApiResponse<void>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      await fetch(`${API_BASE_URL}/actors/${id}/favorite`, { method: 'POST' });
+      */
       return new Promise((resolve) => {
           const actor = MOCK_ACTORS.find(a => a.id === id);
           if (actor) actor.isFavorite = !actor.isFavorite;
-          setTimeout(() => resolve(), 300);
+          setTimeout(() => resolve(success(undefined)), 300);
       });
   },
 
-  updateActor: async (id: string, updates: Partial<Actor>): Promise<void> => {
+  /**
+   * 更新演员信息 (简介、状态、出生日期)
+   * 对应后端 API: PUT /api/actors/{id}
+   */
+  updateActor: async (id: string, updates: Partial<Actor>): Promise<ApiResponse<void>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      await fetch(`${API_BASE_URL}/actors/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+      });
+      */
       return new Promise((resolve) => {
           const actor = MOCK_ACTORS.find(a => a.id === id);
           if (actor) {
               Object.assign(actor, updates);
           }
-          setTimeout(() => resolve(), 300);
+          setTimeout(() => resolve(success(undefined)), 300);
       });
   },
 
-  // NEW METHOD: Toggle Sehuatang Ignore Status
-  toggleSehuatangIgnore: async (id: string): Promise<void> => {
+  /**
+   * 切换色花堂资源的排除状态 (忽略该资源)
+   * 对应后端 API: POST /api/sehuatang/{id}/ignore
+   */
+  toggleSehuatangIgnore: async (id: string): Promise<ApiResponse<void>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      await fetch(`${API_BASE_URL}/sehuatang/${id}/ignore`, { method: 'POST' });
+      */
       return new Promise((resolve) => {
           const item = MOCK_SEHUATANG_DATA.find(d => d.id === id);
           if (item) {
               item.isIgnoredMovie = !item.isIgnoredMovie;
           }
-          setTimeout(() => resolve(), 300);
+          setTimeout(() => resolve(success(undefined)), 300);
       });
   },
 
-  getAllSehuatangData: async (): Promise<SehuatangData[]> => {
+  /**
+   * 获取所有色花堂数据 (无分页，仅用于测试，慎用)
+   */
+  getAllSehuatangData: async (): Promise<ApiResponse<SehuatangData[]>> => {
       return new Promise((resolve) => {
-          setTimeout(() => resolve([...MOCK_SEHUATANG_DATA]), 500);
+          setTimeout(() => resolve(success([...MOCK_SEHUATANG_DATA])), 500);
       });
   },
 
-  getSehuatangCategories: async (): Promise<string[]> => {
+  /**
+   * 获取色花堂数据的所有大类别 (去重)
+   * 对应后端 API: GET /api/sehuatang/categories
+   */
+  getSehuatangCategories: async (): Promise<ApiResponse<string[]>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      const res = await fetch(`${API_BASE_URL}/sehuatang/categories`);
+      return await res.json();
+      */
       return new Promise((resolve) => {
         const categories = Array.from(new Set(MOCK_SEHUATANG_DATA.map(d => d.category).filter((c): c is string => !!c)));
-        setTimeout(() => resolve(categories), 300);
+        setTimeout(() => resolve(success(categories)), 300);
       });
   },
 
-  getSehuatangSubCategories: async (category: string): Promise<string[]> => {
+  /**
+   * 根据大类别获取对应的子类别 (去重)
+   * 对应后端 API: GET /api/sehuatang/subcategories?category=xxx
+   */
+  getSehuatangSubCategories: async (category: string): Promise<ApiResponse<string[]>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      const res = await fetch(`${API_BASE_URL}/sehuatang/subcategories?category=${category}`);
+      return await res.json();
+      */
       return new Promise((resolve) => {
         const subCategories = Array.from(new Set(
             MOCK_SEHUATANG_DATA
@@ -325,18 +528,28 @@ export const mockService = {
                 .map(d => d.subCategory)
                 .filter((c): c is string => !!c)
         ));
-        setTimeout(() => resolve(subCategories), 300);
+        setTimeout(() => resolve(success(subCategories)), 300);
       });
   },
 
-  getTags: async (actorId?: string): Promise<string[]> => {
+  /**
+   * 获取所有影片标签 (支持按演员ID筛选)
+   * 对应后端 API: GET /api/movies/tags?actorId=xxx
+   */
+  getTags: async (actorId?: string): Promise<ApiResponse<string[]>> => {
+      // --- REAL BACKEND CALL (Commented out) ---
+      /*
+      const params = actorId ? `?actorId=${actorId}` : '';
+      const response = await fetch(`${API_BASE_URL}/movies/tags${params}`);
+      return await response.json();
+      */
       return new Promise((resolve) => {
           let targetMovies = MOCK_MOVIES;
           if (actorId) {
               targetMovies = targetMovies.filter(m => m.actorIds.includes(actorId));
           }
           const allTagNames = Array.from(new Set(targetMovies.flatMap(m => m.tags.map(t => t.name))));
-          setTimeout(() => resolve(allTagNames), 300);
+          setTimeout(() => resolve(success(allTagNames)), 300);
       });
   }
 };

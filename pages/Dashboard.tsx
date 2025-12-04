@@ -23,13 +23,13 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // 1. Fetch Aggregated Stats
-      const dashboardStats = await mockService.getDashboardStats();
-      setStats(dashboardStats);
+      // 1. Fetch Aggregated Stats (wrapped in ApiResponse)
+      const dashboardStatsRes = await mockService.getDashboardStats();
+      setStats(dashboardStatsRes.data);
 
-      // 2. Fetch Recent Movies (e.g., first 5)
-      const moviesResponse = await mockService.getMovies(1, 5); // Assuming default sort is chronological
-      setRecentMovies(moviesResponse.content);
+      // 2. Fetch Recent Movies (wrapped in ApiResponse<PageResult>)
+      const moviesResponse = await mockService.getMovies(1, 5); 
+      setRecentMovies(moviesResponse.data.records);
     };
     fetchData();
   }, []);
@@ -221,7 +221,7 @@ export const Dashboard: React.FC = () => {
                     
                     {/* Display Status Badge */}
                     {movie.status === MovieStatus.PENDING && <span className="w-2 h-2 rounded-full bg-amber-500" title="待处理"></span>}
-                    {movie.status === MovieStatus.TO_DOWNLOAD && <Download size={14} className="text-blue-400" title="待下载"/>}
+                    {movie.status === MovieStatus.TO_DOWNLOAD && <span title="待下载"><Download size={14} className="text-blue-400" /></span>}
                  </div>
               </div>
             ))}

@@ -119,7 +119,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie, onClick, onToggleFa
                 </p>
                 
                 <div className="flex flex-wrap gap-1 mt-auto pt-2 pb-2">
-                    {movie.tags.slice(0, 3).map(tag => (
+                    {movie.tags?.slice(0, 3).map(tag => (
                         <span key={tag.id} className="text-[10px] px-1.5 py-0.5 bg-slate-700 text-slate-300 rounded">
                             {tag.name}
                         </span>

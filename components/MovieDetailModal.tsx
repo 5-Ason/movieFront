@@ -16,7 +16,7 @@ export const MovieDetailModal: React.FC<MovieDetailModalProps> = ({ movie, onClo
     const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
     useEffect(() => {
-        mockService.getActorsByMovie(movie.actorIds).then(setMovieActors);
+        mockService.getActorsByMovie(movie.actorIds).then(res => setMovieActors(res.data));
     }, [movie]);
 
     const copyToClipboard = (text: string, id?: string) => {

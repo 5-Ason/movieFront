@@ -15,12 +15,20 @@ export enum MovieStatus {
   PENDING = 'PENDING',         // 不处理/待整理 (Default)
 }
 
-export interface PageResponse<T> {
-  content: T[];
-  totalElements: number;
-  totalPages: number;
-  number: number; // 当前页码
+// Standard API Response Wrapper
+export interface ApiResponse<T> {
+  code: number;
+  msg: string;
+  data: T;
+}
+
+// Pagination Data Structure
+export interface PageResult<T> {
+  records: T[];
+  total: number;
   size: number;
+  current: number;
+  pages: number;
 }
 
 export interface Actor {
@@ -37,7 +45,7 @@ export interface Actor {
 }
 
 export interface Magnet {
-  id: string; // Added ID
+  id: string;
   title: string;
   size: string;
   date: string;
@@ -115,7 +123,7 @@ export interface Movie {
   rating: number; // 0-10
   actorIds: string[];
   description: string; // 影片完整标题
-  tags: Tag[]; // Changed from string[] to Tag[]
+  tags: Tag[]; 
   magnets?: Magnet[]; // 磁力链接列表
   
   // Renamed property
@@ -126,20 +134,15 @@ export interface Movie {
 
 export interface DashboardStats {
   totalMovies: number;
-  
-  // Status Counts
   statusPending: number;
   statusToDownload: number;
   statusExcluded: number;
   statusInLibrary: number;
-
-  // Storage Counts
   storage115: number;
   storageNas: number;
-  
   totalActors: number;
   activeActors: number;
-  retiredActors: number; // Added
+  retiredActors: number;
   censoredMovies: number;
   uncensoredMovies: number;
 }
