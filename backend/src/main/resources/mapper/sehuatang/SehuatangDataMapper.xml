@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ason.movievault.mapper.sehuatang.SehuatangDataMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.ason.movievault.entity.SehuatangData">
+        <id column="id" property="id" />
+        <result column="movie_id" property="movieId" />
+        <result column="movie_code" property="movieCode" />
+        <result column="release_date" property="releaseDate" />
+        <result column="category" property="category" />
+        <result column="sub_category" property="subCategory" />
+        <result column="code" property="code" />
+        <result column="original_code" property="originalCode" />
+        <result column="has_subtitles" property="hasSubtitles" />
+        <result column="is_vr" property="isVr" />
+        <result column="has_mosaic" property="hasMosaic" />
+        <result column="original_title" property="originalTitle" />
+        <result column="title" property="title" />
+        <result column="actresses" property="actresses" />
+        <result column="cover_url" property="coverUrl" />
+        <result column="in_115" property="in115" />
+        <result column="in_nas" property="inNas" />
+        <result column="size" property="size" />
+        <result column="magnet_link" property="magnetLink" />
+        <result column="source_url" property="sourceUrl" />
+        <result column="cleaning_status" property="cleaningStatus" />
+        <result column="is_actor_favorite" property="isActorFavorite" />
+        <result column="is_multi_actor" property="isMultiActor" />
+        <result column="is_ignored" property="isIgnored" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, movie_id, movie_code, release_date, category, sub_category, code, original_code, has_subtitles, is_vr, has_mosaic, original_title, title, actresses, cover_url, in_115, in_nas, size, magnet_link, source_url, cleaning_status, is_actor_favorite, is_multi_actor, is_ignored, created_at, updated_at
+    </sql>
+
+</mapper>
