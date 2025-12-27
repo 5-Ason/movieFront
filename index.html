@@ -11,6 +11,7 @@
         font-family: 'Inter', sans-serif;
         background-color: #0f172a; /* Slate 900 */
         color: #e2e8f0; /* Slate 200 */
+        margin: 0;
       }
       /* Custom scrollbar for webkit */
       ::-webkit-scrollbar {
@@ -25,6 +26,9 @@
       }
       ::-webkit-scrollbar-thumb:hover {
         background: #64748b; 
+      }
+      #root {
+        min-height: 100vh;
       }
     </style>
   <script type="importmap">
@@ -42,5 +46,7 @@
 </head>
   <body>
     <div id="root"></div>
+    <!-- 关键修复：引入入口文件 -->
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -1,17 +1,10 @@
 import { Movie, Actor, MovieStatus, SehuatangData, ApiResponse, PageResult, DashboardStats, ActorStatus, MovieCensorship, Tag } from '../types';
 import { MOCK_MOVIES, MOCK_ACTORS, MOCK_SEHUATANG_DATA } from './mockData';
 
-/**
- * 核心配置说明：
- * 1. 本地开发运行 npm run dev 时，Vite 会通过 proxy 将 /api 转发到后端 8080 端口。
- * 2. 部署到 Spring Boot 后，前端文件在 static 目录下，/api 请求会直接发给同源后端。
- */
 const API_BASE_URL = '/api';
 
-// 调试开关：
-// true  -> 始终使用 Mock 数据（适用于前端独立开发）
-// false -> 尝试请求后端接口，失败后再回退到 Mock（适用于联合调试）
-const FORCE_MOCK = false; 
+// 修改为 true，确保本地纯前端开发时能看到 Mock 数据
+const FORCE_MOCK = true; 
 
 interface MovieFilterParams {
     searchTerm?: string;
@@ -69,25 +62,26 @@ const success = <T>(data: T): ApiResponse<T> => ({
     data
 });
 
-/**
- * 核心请求封装：尝试请求后端，失败则静默回退到指定的 Mock 逻辑
- */
 async function tryFetch<T>(url: string, mockFallback: () => T, options?: RequestInit): Promise<ApiResponse<T>> {
     if (FORCE_MOCK) return success(mockFallback());
     
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        
         const response = await fetch(`${API_BASE_URL}${url}`, {
             ...options,
-            // 如果 3 秒没响应，可能是后端没开，快速切换到 Mock
-            signal: AbortSignal.timeout(3000) 
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+
         if (response.ok) {
             const result = await response.json();
-            // 简单校验下后端返回格式，如果是 200 才认为是有效的业务数据
             if (result.code === 200) return result;
         }
     } catch (e) {
-        console.warn(`[API] 接口连接失败，已回退到模拟数据: ${url}`);
+        console.warn(`[API] 接口请求异常，回退到 Mock: ${url}`, e);
     }
     return success(mockFallback());
 }
