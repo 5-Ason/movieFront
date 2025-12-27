@@ -1,0 +1,24 @@
+version: "3.8"
+services:
+  movie-front:
+    image: node:18-alpine
+    container_name: movie-front
+    restart: always
+    network_mode: bridge
+    working_dir: /usr/src/app
+    environment:
+      - TZ=Asia/Shanghai
+      - NODE_ENV=development
+      - NPM_CONFIG_CACHE=/tmp/.npm
+    ports:
+      # 映射宿主机 5174 到容器 3000
+      - "5174:3000"
+    volumes:
+      - /vol1/1000/chaosheng.wu/Container/movieFront.git:/usr/src/app
+      - node_modules_data:/usr/src/app/node_modules
+    user: "1000:1000"
+    # 关键修复：添加 --port 3000 参数，确保 Vite 监听容器内的 3000 端口
+    command: sh -c "npm config set registry https://registry.npmmirror.com && npm install && npm run dev -- --host 0.0.0.0 --port 3000"
+
+volumes:
+  node_modules_data:
