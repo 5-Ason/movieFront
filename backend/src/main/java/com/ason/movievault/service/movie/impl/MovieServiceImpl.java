@@ -60,6 +60,7 @@ public class MovieServiceImpl extends ServiceImpl<MovieMapper, Movie> implements
         }
 
         // TODO: 演员搜索（需 join movie_actor 表）
+
         // TODO: 标签搜索（需 join movie_genre 表）
 
         return this.page(page, qw);
@@ -67,7 +68,6 @@ public class MovieServiceImpl extends ServiceImpl<MovieMapper, Movie> implements
 
     @Override
     public void updateStatus(Long id, MovieStatus status) {
-        // TODO: 补充业务逻辑（如更新时间、记录日志、触发下载等）
         Movie movie = new Movie();
         movie.setId(id);
         movie.setStatus(status);
@@ -76,7 +76,6 @@ public class MovieServiceImpl extends ServiceImpl<MovieMapper, Movie> implements
 
     @Override
     public void toggleFavorite(Long id) {
-        // TODO: 补充业务逻辑（如更新缓存、发送消息等）
         Movie movie = this.getById(id);
         if (movie != null) {
             movie.setIsFavorite(!movie.getIsFavorite());

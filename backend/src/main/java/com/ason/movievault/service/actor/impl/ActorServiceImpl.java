@@ -50,7 +50,6 @@ public class ActorServiceImpl extends ServiceImpl<ActorMapper, Actor> implements
 
     @Override
     public void toggleFavorite(Long id) {
-        // TODO: 补充业务逻辑（如更新缓存、发送消息等）
         Actor actor = this.getById(id);
         if (actor != null) {
             actor.setIsFavorite(!actor.getIsFavorite());
@@ -60,7 +59,6 @@ public class ActorServiceImpl extends ServiceImpl<ActorMapper, Actor> implements
 
     @Override
     public void updateActor(Long id, com.ason.movievault.dto.ActorUpdateDTO dto) {
-        // TODO: 补充业务逻辑（如验证、记录历史等）
         Actor actor = new Actor();
         actor.setId(id);
         actor.setStatus(dto.getStatus());
